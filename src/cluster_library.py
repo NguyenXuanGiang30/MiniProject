@@ -17,8 +17,8 @@ import seaborn as sns
 from scipy import stats
 from mlxtend.frequent_patterns import apriori, fpgrowth, association_rules
 from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 from sklearn.decomposition import PCA, TruncatedSVD
 import plotly.express as px
 import networkx as nx
@@ -1481,6 +1481,45 @@ class RuleBasedCustomerClusterer:
             score = silhouette_score(X, labels)
             rows.append({"k": k, "silhouette": score})
         return pd.DataFrame(rows).sort_values("silhouette", ascending=False).reset_index(drop=True)
+
+    @staticmethod
+    def evaluate_models(
+        X: np.ndarray,
+        k_range: list[int],
+        random_state: int = 42
+    ) -> pd.DataFrame:
+        """So sánh KMeans và Agglomerative Clustering trên nhiều chỉ số."""
+        rows = []
+        for k in k_range:
+            # KMeans
+            km = KMeans(n_clusters=k, n_init="auto", random_state=random_state)
+            labels_km = km.fit_predict(X)
+            rows.append({
+                "model": "KMeans",
+                "k": k,
+                "silhouette": silhouette_score(X, labels_km),
+                "dbi": davies_bouldin_score(X, labels_km),
+                "ch_index": calinski_harabasz_score(X, labels_km)
+            })
+            
+            # Agglomerative
+            agg = AgglomerativeClustering(n_clusters=k)
+            labels_agg = agg.fit_predict(X)
+            rows.append({
+                "model": "Agglomerative",
+                "k": k,
+                "silhouette": silhouette_score(X, labels_agg),
+                "dbi": davies_bouldin_score(X, labels_agg),
+                "ch_index": calinski_harabasz_score(X, labels_agg)
+            })
+            
+        return pd.DataFrame(rows)
+
+    def fit_agglomerative(self, X: np.ndarray, n_clusters: int) -> np.ndarray:
+        """Fit Agglomerative Clustering và trả về labels."""
+        model = AgglomerativeClustering(n_clusters=int(n_clusters))
+        labels = model.fit_predict(X)
+        return labels
 
     def fit_kmeans(
         self,

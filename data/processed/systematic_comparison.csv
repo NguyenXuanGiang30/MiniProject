@@ -1,0 +1,8 @@
+Top-K,Weighting,Use RFM,Best Silhouette,Chosen K
+50,none,False,0.5574,3
+50,lift,False,0.5919,4
+50,lift,True,0.5856,3
+200,none,False,0.4362,2
+200,lift,False,0.4529,2
+200,lift,True,0.4582,2
+200,lift_x_conf,True,0.6357,2
