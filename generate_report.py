@@ -14,13 +14,20 @@ def get_base64_image(image_path):
     return ""
 
 def generate_html():
-    # Load data
     try:
         df_rfm = pd.read_csv(f"{DATA_DIR}/cluster_rfm_summary.csv")
         df_rules = pd.read_csv(f"{DATA_DIR}/cluster_top_rules.csv")
-        df_compare = pd.read_csv(f"{DATA_DIR}/systematic_comparison.csv")
         df_model = pd.read_csv(f"{DATA_DIR}/model_comparison.csv")
+        df_roi = pd.read_csv(f"{DATA_DIR}/roi_projections.csv")
+        
+        # Base64 images
         pca_base64 = get_base64_image(f"{DATA_DIR}/cluster_pca.png")
+        rev_dist_base64 = get_base64_image(f"{DATA_DIR}/revenue_distribution.png")
+        roi_proj_base64 = get_base64_image(f"{DATA_DIR}/roi_projection.png")
+        clv_dist_base64 = get_base64_image(f"{DATA_DIR}/clv_distribution.png")
+        churn_risk_base64 = get_base64_image(f"{DATA_DIR}/churn_risk.png")
+        radar_base64 = get_base64_image(f"{DATA_DIR}/cluster_radar.png")
+        
     except Exception as e:
         print(f"Error loading data: {e}")
         return
@@ -45,7 +52,7 @@ def generate_html():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Customer Segmentation Report</title>
+        <title>Customer Segmentation & ROI Report</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
         <style>
             :root {{
@@ -54,6 +61,7 @@ def generate_html():
                 --bg: #f8fafc;
                 --card: #ffffff;
                 --text: #1e293b;
+                --accent: #f59e0b;
             }}
             body {{
                 font-family: 'Inter', sans-serif;
@@ -64,95 +72,184 @@ def generate_html():
                 padding: 0;
             }}
             .container {{
-                max-width: 1000px;
+                max-width: 1100px;
                 margin: 40px auto;
                 padding: 0 20px;
             }}
             header {{
                 text-align: center;
                 margin-bottom: 50px;
+                background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+                color: white;
+                padding: 60px 20px;
+                border-radius: 20px;
+                box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
             }}
-            h1 {{ font-size: 2.5rem; margin-bottom: 10px; color: var(--primary); }}
+            header h1 {{ margin: 0; font-size: 3rem; }}
+            header p {{ font-size: 1.2rem; opacity: 0.9; }}
+            
+            .section-title {{
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #e2e8f0;
+            }}
+            .section-title i {{ margin-right: 15px; font-size: 1.5rem; color: var(--primary); }}
+            
             .card {{
                 background: var(--card);
-                padding: 30px;
-                border-radius: 12px;
+                padding: 35px;
+                border-radius: 16px;
                 box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                margin-bottom: 40px;
+                transition: transform 0.2s;
+            }}
+            .card:hover {{ transform: translateY(-5px); }}
+            
+            h2 {{ color: var(--primary); margin-top: 0; }}
+            
+            .grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 25px;
+            }}
+            .stats-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
                 margin-bottom: 30px;
             }}
-            h2 {{ border-left: 5px solid var(--primary); padding-left: 15px; margin-bottom: 20px; }}
+            .stat-card {{
+                background: #f1f5f9;
+                padding: 20px;
+                border-radius: 12px;
+                text-align: center;
+            }}
+            .stat-value {{ font-size: 1.8rem; font-weight: 700; color: var(--primary); }}
+            .stat-label {{ font-size: 0.9rem; color: var(--secondary); }}
+
             table {{
                 width: 100%;
                 border-collapse: collapse;
                 margin-top: 20px;
+                font-size: 0.95rem;
             }}
             th, td {{
-                padding: 12px;
+                padding: 14px;
                 text-align: left;
                 border-bottom: 1px solid #e2e8f0;
             }}
-            th {{ background-color: #f1f5f9; font-weight: 600; }}
-            .grid {{
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-            }}
+            th {{ background-color: #f8fafc; font-weight: 600; color: #475569; }}
+            
             .persona {{
                 border: 1px solid #e2e8f0;
-                padding: 20px;
-                border-radius: 8px;
-                background: #fdfdfd;
+                padding: 25px;
+                border-radius: 12px;
+                background: #ffffff;
+                position: relative;
             }}
             .badge {{
                 display: inline-block;
-                padding: 4px 12px;
-                border-radius: 20px;
+                padding: 6px 14px;
+                border-radius: 30px;
                 background: var(--primary);
                 color: white;
-                font-size: 0.8rem;
-                margin-bottom: 10px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                margin-bottom: 15px;
             }}
             .strategy {{
-                background: #f0fdf4;
-                border: 1px solid #bbf7d0;
-                padding: 15px;
-                border-radius: 6px;
-                margin-top: 15px;
-                font-weight: 500;
+                background: #ecfdf5;
+                border: 1px solid #10b981;
+                padding: 18px;
+                border-radius: 10px;
+                margin-top: 20px;
+                font-size: 0.95rem;
+            }}
+            
+            .chart-container {{
+                text-align: center;
+                margin-top: 20px;
             }}
             img {{
                 max-width: 100%;
-                border-radius: 8px;
-                margin-top: 20px;
+                height: auto;
+                border-radius: 12px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             }}
+            
+            .roi-tag {{
+                font-weight: 700;
+                color: #059669;
+                font-size: 1.1rem;
+            }}
+
             .footer {{
                 text-align: center;
-                margin-top: 60px;
+                margin-top: 80px;
+                padding: 40px;
                 color: var(--secondary);
                 font-size: 0.9rem;
+                border-top: 1px solid #e2e8f0;
             }}
         </style>
     </head>
     <body>
         <div class="container">
             <header>
-                <h1>🛍️ Dự Án Phân Khúc Khách Hàng</h1>
-                <p>Báo cáo kết quả kết hợp Association Rules & RFM Clustering</p>
+                <h1>📊 Chiến Lược Phân Khúc KH & ROI</h1>
+                <p>Báo cáo phân tích nâng cao: Phân cụm - Luật kết hợp - Dự báo tăng trưởng</p>
             </header>
 
             <section class="card">
-                <h2>1. Trực Quan Hóa Phân Cụm (PCA)</h2>
-                <p>Bản đồ PCA 2D giúp quan sát mức độ tách biệt giữa các nhóm khách hàng dựa trên hành vi mua sắm và giá trị giao dịch.</p>
-                <img src="data:image/png;base64,{pca_base64}" alt="PCA Plot">
+                <div class="section-title"><h2>1. Tổng Quan Phân Cụm (Clustering Overview)</h2></div>
+                <div class="grid">
+                    <div class="chart-container">
+                        <h3>Mặt phẳng PCA</h3>
+                        <img src="data:image/png;base64,{pca_base64}" alt="PCA Plot">
+                    </div>
+                    <div class="chart-container">
+                        <h3>Đồ thị Radar (Gốc RFM)</h3>
+                        <img src="data:image/png;base64,{radar_base64}" alt="Radar Chart">
+                    </div>
+                </div>
             </section>
 
             <section class="card">
-                <h2>2. Thống Kê Chỉ Số RFM Theo Cụm</h2>
-                {df_rfm.to_html(index=False, classes='table')}
+                <div class="section-title"><h2>2. Phân Tích Doanh Thu & CLV (Revenue & Lifetime Value)</h2></div>
+                <div class="grid">
+                    <div class="chart-container">
+                        <h3>Tỷ trọng doanh thu theo cụm</h3>
+                        <img src="data:image/png;base64,{rev_dist_base64}" alt="Revenue Distribution">
+                    </div>
+                    <div class="chart-container">
+                        <h3>Ước tính CLV (Boxplot)</h3>
+                        <img src="data:image/png;base64,{clv_dist_base64}" alt="CLV Distribution">
+                    </div>
+                </div>
             </section>
 
             <section class="card">
-                <h2>3. Chân Dung Khách Hàng & Chiến Lược</h2>
+                <div class="section-title"><h2>3. Dự Báo ROI & Rủi Ro (ROI Projection & Churn Risk)</h2></div>
+                <div class="grid">
+                    <div class="chart-container">
+                        <h3>Dự báo tỷ lệ ROI (%)</h3>
+                        <img src="data:image/png;base64,{roi_proj_base64}" alt="ROI Projection">
+                    </div>
+                    <div class="chart-container">
+                        <h3>Rủi ro rời bỏ (Recency based)</h3>
+                        <img src="data:image/png;base64,{churn_risk_base64}" alt="Churn Risk">
+                    </div>
+                </div>
+                <div style="margin-top: 30px;">
+                    <h3>Bảng dữ liệu ROI dự kiến</h3>
+                    {df_roi.to_html(index=False, classes='table')}
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="section-title"><h2>4. Chân Dung Khách Hàng & Chiến Lược</h2></div>
                 <div class="grid">
     """
 
@@ -162,7 +259,7 @@ def generate_html():
                         <span class="badge">Cụm {cid}</span>
                         <h3>{p['name']}</h3>
                         <p>{p['desc']}</p>
-                        <div class="strategy">💡 Chiến lược: {p['strategy']}</div>
+                        <div class="strategy">💡 <b>Chiến lược:</b> {p['strategy']}</div>
                     </div>
         """
 
@@ -171,8 +268,8 @@ def generate_html():
             </section>
 
             <section class="card">
-                <h2>4. Top Quy Luật Mua Sắm Theo Cụm</h2>
-                <p>Các luật kết hợp (Association Rules) có chỉ số Lift cao nhất được kích hoạt trong từng cụm.</p>
+                <div class="section-title"><h2>5. Quy Luật Mua Sắm Gợi Ý (Association Rules)</h2></div>
+                <p>Các quy luật có chỉ số <i>Lift</i> cao nhất giúp tối ưu hóa Cross-selling trong từng nhóm.</p>
     """
 
     for cid in df_rules['cluster'].unique():
@@ -184,18 +281,22 @@ def generate_html():
             </section>
 
             <section class="card">
-                <h2>5. Nâng Cấp: So Sánh Đa Mô Hình</h2>
-                <p>So sánh hiệu quả giữa KMeans và Agglomerative Clustering qua các chỉ số Silhouette, DBI và CH Index.</p>
+                <div class="section-title"><h2>6. Đánh Giá Kỹ Thuật (Model Evaluation)</h2></div>
+                <p>Bảng so sánh chất lượng phân cụm giữa các thuật toán và số cụm K khác nhau.</p>
                 {df_model.to_html(index=False, classes='table')}
             </section>
 
             <div class="footer">
-                &copy; 2026 Mini Project - Data Mining | Được tạo tự động bởi Antigravity AI
+                &copy; 2026 Mini Project - Data Mining & BI | Hệ thống phân tích tự động
             </div>
         </div>
     </body>
     </html>
     """
+
+    with open(REPORT_PATH, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print(f"Generated enhanced report: {REPORT_PATH}")
 
     with open(REPORT_PATH, "w", encoding="utf-8") as f:
         f.write(html_content)
